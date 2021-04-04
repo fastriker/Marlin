@@ -38,7 +38,7 @@
  * Advanced settings can be found in Configuration_adv.h
  *
  */
-#define CONFIGURATION_H_VERSION 020006
+#define CONFIGURATION_H_VERSION 020007  
 
 //===========================================================================
 //============================= Getting Started =============================
@@ -73,7 +73,7 @@
 // @section info
 
 // Author info of this build printed to the host during boot and M115
-#define STRING_CONFIG_H_AUTHOR "(thisiskeithb, Ender-3)" // Who made the changes.
+#define STRING_CONFIG_H_AUTHOR "(Kai Kientopf, myEnder-3-Pro)" // Who made the changes.
 //#define CUSTOM_VERSION_FILE Version.h // Path from the root directory (no quotes)
 
 /**
@@ -491,10 +491,17 @@
 
   // If you are using a pre-configured hotend then you can use one of the value sets by uncommenting it
   // Creality Ender-3
-  #define DEFAULT_Kp 21.73
-  #define DEFAULT_Ki 1.54
-  #define DEFAULT_Kd 76.55
-
+  #if ENABLED(PID_PARAMS_PER_HOTEND)
+    // Specify between 1 and HOTENDS values per array.
+    // If fewer than EXTRUDER values are provided, the last element will be repeated.
+    #define DEFAULT_Kp_LIST {  22.20,  22.20 }
+    #define DEFAULT_Ki_LIST {   1.08,   1.08 }
+    #define DEFAULT_Kd_LIST { 114.00, 114.00 }
+  #else
+    #define DEFAULT_Kp 21.73
+    #define DEFAULT_Ki 1.54
+    #define DEFAULT_Kd 76.55
+  #endif
 #endif // PIDTEMP
 
 //===========================================================================
@@ -530,17 +537,11 @@
   //#define MIN_BED_POWER 0
   //#define PID_BED_DEBUG // Sends debug data to the serial port.
 
-  //120V 250W silicone heater into 4mm borosilicate (MendelMax 1.5+)
-  //from FOPDT model - kp=.39 Tp=405 Tdead=66, Tc set to 79.2, aggressive factor of .15 (vs .1, 1, 10)
+  // 120V 250W silicone heater into 4mm borosilicate (MendelMax 1.5+)
+  // from FOPDT model - kp=.39 Tp=405 Tdead=66, Tc set to 79.2, aggressive factor of .15 (vs .1, 1, 10)
   //#define DEFAULT_bedKp 10.00
   //#define DEFAULT_bedKi .023
   //#define DEFAULT_bedKd 305.4
-
-  //120V 250W silicone heater into 4mm borosilicate (MendelMax 1.5+)
-  //from pidautotune
-  //#define DEFAULT_bedKp 97.1
-  //#define DEFAULT_bedKi 1.41
-  //#define DEFAULT_bedKd 1675.16
 
   // FIND YOUR OWN: "M303 E-1 C8 S90" to run autotune on the bed at 90 degreesC for 8 cycles.
   #define DEFAULT_bedKp 50.71
@@ -603,7 +604,7 @@
 
 // @section machine
 
-// Uncomment one of these options to enable CoreXY, CoreXZ, or CoreYZ kinematics
+// Enable one of the options below for CoreXY, CoreXZ, or CoreYZ kinematics,
 // either in the usual order or reversed
 //#define COREXY
 //#define COREXZ
@@ -842,10 +843,10 @@
  * The probe replaces the Z-MIN endstop and is used for Z homing.
  * (Automatically enables USE_PROBE_FOR_Z_HOMING.)
  */
-#define Z_MIN_PROBE_USES_Z_MIN_ENDSTOP_PIN
+//#define Z_MIN_PROBE_USES_Z_MIN_ENDSTOP_PIN
 
 // Force the use of the probe for Z-axis homing
-//#define USE_PROBE_FOR_Z_HOMING
+#define USE_PROBE_FOR_Z_HOMING
 
 /**
  * Z_MIN_PROBE_PIN
@@ -863,7 +864,7 @@
  *      - normally-open switches to 5V and D32.
  *
  */
-//#define Z_MIN_PROBE_PIN 32 // Pin 32 is the RAMPS default
+#define Z_MIN_PROBE_PIN PC14 // Pin 32 is the RAMPS default
 
 /**
  * Probe Type
@@ -901,7 +902,7 @@
 /**
  * The BLTouch probe uses a Hall effect sensor and emulates a servo.
  */
-//#define BLTOUCH
+#define BLTOUCH
 
 /**
  * Pressure sensor with a BLTouch-like interface
@@ -988,7 +989,7 @@
  *     |    [-]    |
  *     O-- FRONT --+
  */
-#define NOZZLE_TO_PROBE_OFFSET { 10, 10, 0 }
+#define NOZZLE_TO_PROBE_OFFSET { -40, -12, 0 }
 
 // Most probes should stay away from the edges of the bed, but
 // with NOZZLE_AS_PROBE this can be negative for a wider probing area.
@@ -1235,9 +1236,9 @@
  */
 //#define AUTO_BED_LEVELING_3POINT
 //#define AUTO_BED_LEVELING_LINEAR
-//#define AUTO_BED_LEVELING_BILINEAR
+#define AUTO_BED_LEVELING_BILINEAR
 //#define AUTO_BED_LEVELING_UBL
-#define MESH_BED_LEVELING
+//#define MESH_BED_LEVELING
 
 /**
  * Normally G28 leaves leveling disabled on completion. Enable
@@ -1386,7 +1387,7 @@
 // - Move the Z probe (or nozzle) to a defined XY point before Z Homing.
 // - Prevent Z homing when the Z probe is outside bed area.
 //
-//#define Z_SAFE_HOMING
+#define Z_SAFE_HOMING
 
 #if ENABLED(Z_SAFE_HOMING)
   #define Z_SAFE_HOMING_X_POINT X_CENTER  // X point for Z homing
@@ -1933,6 +1934,14 @@
 //
 //#define FF_INTERFACEBOARD
 
+//
+// TFT GLCD Panel with Marlin UI
+// Panel connected to main board by SPI or I2C interface.
+// See https://github.com/Serhiy-K/TFTGLCDAdapter
+//
+//#define TFTGLCD_PANEL_SPI
+//#define TFTGLCD_PANEL_I2C
+
 //=============================================================================
 //=======================   LCD / Controller Selection  =======================
 //=========================      (Graphical LCDs)      ========================
@@ -2129,6 +2138,9 @@
 // Touch-screen LCD for Malyan M200/M300 printers
 //
 //#define MALYAN_LCD
+#if ENABLED(MALYAN_LCD)
+  #define LCD_SERIAL_PORT 1  // Default is 1 for Malyan M200
+#endif
 
 //
 // Touch UI for FTDI EVE (FT800/FT810) displays
@@ -2258,9 +2270,6 @@
 // then the BLUE led is on. Otherwise the RED led is on. (1C hysteresis)
 //#define TEMP_STAT_LEDS
 
-// SkeinForge sends the wrong arc G-codes when using Arc Point as fillet procedure
-//#define SF_ARC_FIX
-
 // Support for the BariCUDA Paste Extruder
 //#define BARICUDA
 
@@ -2347,7 +2356,7 @@
  *
  * For some servo-related options NUM_SERVOS will be set automatically.
  * Set this manually if there are extra servos needing manual control.
- * Leave undefined or set to 0 to entirely disable the servo subsystem.
+ * Set to 0 to turn off servo support.
  */
 //#define NUM_SERVOS 3 // Servo index starts with 0 for M280 command
 
@@ -2359,5 +2368,5 @@
 // Only power servos during movement, otherwise leave off to prevent jitter
 //#define DEACTIVATE_SERVOS_AFTER_MOVE
 
-// Allow servo angle to be edited and saved to EEPROM
+// Edit servo angles with M281 and save to EEPROM with M500
 //#define EDITABLE_SERVO_ANGLES
